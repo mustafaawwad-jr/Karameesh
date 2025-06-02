@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Karameesh TV - Landscape Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            touch-action: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .orientation-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .orientation-message.show {
+            display: flex;
+        }
+        
+        .orientation-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: rotate 2s infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(90deg); }
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+        
+        #media-container {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            position: relative;
+            transform: rotate(0deg);
+            transition: transform 0.3s;
+        }
+        
+        #tv {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        #image-display {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+        
+        .live-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: red;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="orientation-message">
+        <div class="orientation-icon">↻</div>
+        <div class="logo">Karameesh TV</div>
+        <h2>لطفاً دستگاه خود را به حالت افقی بچرخانید</h2>
+        <p>برای مشاهده محتوا، گوشی خود را 90 درجه بچرخانید</p>
+    </div>
+    
+    <div id="media-container">
+        <div class="live-badge">LIVE</div>
+        <video id="tv" autoplay muted></video>
+        <img id="image-display" alt="Display Image">
+    </div>
+
+    <script>
+        // لیست مدیاها
+        const mediaList = [
+            { type: 'video', src: 'https://persian11.cdn.asset.aparat.com/aparat-video/55d7d85c0a587be30a2cb8347f648d2759890421-1080p.mp4?wmsAuthSign=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6IjdlYWFlOTBlNDIyZDllZDYyOGYzZDU4YmE5YTFhY2ZiIiwiZXhwIjoxNzQ4ODkxNjE3LCJpc3MiOiJTYWJhIElkZWEgR1NJRyJ9.UheriDskG4JWqhgoAbNx4E1ycB4hZx93rS33uozYH20' },
+            { type: 'image', src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyH4yicR1k-DI3-4HwMJ9LYyGdKPmW3lnJaA&s', duration: 10000 },
+        ];
+
+        const tv = document.getElementById("tv");
+        const imageDisplay = document.getElementById("image-display");
+        const mediaContainer = document.getElementById("media-container");
+        const orientationMessage = document.querySelector('.orientation-message');
+
+        // بررسی وضعیت افقی بودن
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                // حالت عمودی
+                orientationMessage.classList.add('show');
+                mediaContainer.style.display = 'none';
+            } else {
+                // حالت افقی
+                orientationMessage.classList.remove('show');
+                mediaContainer.style.display = 'block';
+            }
+        }
+
+        // غیرفعال کردن کنترل‌ها
+        tv.controls = false;
+        tv.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        function playRandomMedia() {
+            if (mediaList.length === 0) return;
+
+            const randomIndex = Math.floor(Math.random() * mediaList.length);
+            const media = mediaList[randomIndex];
+
+            if (media.type === 'video') {
+                imageDisplay.style.display = 'none';
+                tv.style.display = 'block';
+                tv.src = media.src;
+                tv.load();
+                
+                tv.play().catch(e => {
+                    console.log("خطا در پخش ویدیو:", e);
+                    setTimeout(playRandomMedia, 3000);
+                });
+
+                tv.onended = playRandomMedia;
+            } 
+            else if (media.type === 'image') {
+                tv.style.display = 'none';
+                imageDisplay.style.display = 'block';
+                imageDisplay.src = media.src;
+                
+                setTimeout(playRandomMedia, media.duration || 10000);
+            }
+        }
+
+        // رویدادهای چرخش صفحه
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
+        // شروع اولیه
+        checkOrientation();
+        if (window.innerWidth > window.innerHeight) {
+            playRandomMedia();
+        }
+    </script>
+</body>
+</html>
